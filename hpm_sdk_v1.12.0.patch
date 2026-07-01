@@ -1,0 +1,165 @@
+diff --git a/middleware/cherryusb/class/dfu/usbd_dfu.c b/middleware/cherryusb/class/dfu/usbd_dfu.c
+index f6c74066..0082a32b 100644
+--- a/middleware/cherryusb/class/dfu/usbd_dfu.c
++++ b/middleware/cherryusb/class/dfu/usbd_dfu.c
+@@ -50,7 +50,9 @@ static int dfu_class_interface_request_handler(uint8_t busid, struct usb_setup_p
+                     (*data)[0] = g_usbd_dfu.dfu_state;
+                     *len = 1;
+                     break;
+-
++                case DFU_REQUEST_CLRSTATUS:
++                    g_usbd_dfu.dfu_state = DFU_STATE_DFU_IDLE;
++                    break;
+                 default:
+                     return -1;
+             }
+@@ -70,6 +72,9 @@ static int dfu_class_interface_request_handler(uint8_t busid, struct usb_setup_p
+                     (*data)[0] = g_usbd_dfu.dfu_state;
+                     *len = 1;
+                     break;
++                case DFU_REQUEST_CLRSTATUS:
++                    g_usbd_dfu.dfu_state = DFU_STATE_DFU_IDLE;
++                    break;
+ 
+                 default:
+                     return -1;
+@@ -121,6 +126,9 @@ static int dfu_class_interface_request_handler(uint8_t busid, struct usb_setup_p
+                     (*data)[0] = g_usbd_dfu.dfu_state;
+                     *len = 1;
+                     break;
++                case DFU_REQUEST_CLRSTATUS:
++                    g_usbd_dfu.dfu_state = DFU_STATE_DFU_IDLE;
++                    break;
+ 
+                 default:
+                     return -1;
+@@ -143,6 +151,9 @@ static int dfu_class_interface_request_handler(uint8_t busid, struct usb_setup_p
+                     (*data)[0] = g_usbd_dfu.dfu_state;
+                     *len = 1;
+                     break;
++                case DFU_REQUEST_CLRSTATUS:
++                    g_usbd_dfu.dfu_state = DFU_STATE_DFU_IDLE;
++                    break;
+ 
+                 default:
+                     return -1;
+@@ -165,6 +176,9 @@ static int dfu_class_interface_request_handler(uint8_t busid, struct usb_setup_p
+                     (*data)[0] = g_usbd_dfu.dfu_state;
+                     *len = 1;
+                     break;
++                case DFU_REQUEST_CLRSTATUS:
++                    g_usbd_dfu.dfu_state = DFU_STATE_DFU_IDLE;
++                    break;
+ 
+                 default:
+                     return -1;
+@@ -204,6 +218,9 @@ static int dfu_class_interface_request_handler(uint8_t busid, struct usb_setup_p
+                     (*data)[0] = g_usbd_dfu.dfu_state;
+                     *len = 1;
+                     break;
++                case DFU_REQUEST_CLRSTATUS:
++                    g_usbd_dfu.dfu_state = DFU_STATE_DFU_IDLE;
++                    break;
+ 
+                 default:
+                     return -1;
+@@ -241,6 +258,9 @@ static int dfu_class_interface_request_handler(uint8_t busid, struct usb_setup_p
+                     (*data)[0] = g_usbd_dfu.dfu_state;
+                     *len = 1;
+                     break;
++                case DFU_REQUEST_CLRSTATUS:
++                    g_usbd_dfu.dfu_state = DFU_STATE_DFU_IDLE;
++                    break;
+ 
+                 default:
+                     return -1;
+@@ -264,6 +284,9 @@ static int dfu_class_interface_request_handler(uint8_t busid, struct usb_setup_p
+                     (*data)[0] = g_usbd_dfu.dfu_state;
+                     *len = 1;
+                     break;
++                case DFU_REQUEST_CLRSTATUS:
++                    g_usbd_dfu.dfu_state = DFU_STATE_DFU_IDLE;
++                    break;
+ 
+                 default:
+                     return -1;
+@@ -288,6 +311,9 @@ static int dfu_class_interface_request_handler(uint8_t busid, struct usb_setup_p
+                     (*data)[0] = g_usbd_dfu.dfu_state;
+                     *len = 1;
+                     break;
++                case DFU_REQUEST_CLRSTATUS:
++                    g_usbd_dfu.dfu_state = DFU_STATE_DFU_IDLE;
++                    break;
+ 
+                 default:
+                     return -1;
+diff --git a/middleware/cherryusb/port/hpmicro/hpm_dfu_port.c b/middleware/cherryusb/port/hpmicro/hpm_dfu_port.c
+index 2841c9c0..270bc6cc 100644
+--- a/middleware/cherryusb/port/hpmicro/hpm_dfu_port.c
++++ b/middleware/cherryusb/port/hpmicro/hpm_dfu_port.c
+@@ -21,6 +21,7 @@
+ #endif
+ #include "hpm_ppor_drv.h"
+ #include "usb_dfu.h"
++#include "usbh_core.h"
+ 
+ #define DFU_TRIGGER_MAGIC (0x55464455UL)
+ #define DFU_TRIGGER_BGPR_INDEX (0U)
+@@ -91,7 +92,7 @@ static void dfu_flash_init(void)
+ static int dfu_erase_flash(uint32_t add)
+ {
+     if (s_dfu_xpi_nor_size == 0) {
+-        printf("DFU: Flash size not initialized\r\n");
++        USB_LOG_ERR("DFU: Flash size not initialized\r\n");
+         return 1;
+     }
+ 
+@@ -102,7 +103,7 @@ static int dfu_erase_flash(uint32_t add)
+     rom_xpi_nor_get_property(base, &s_dfu_xpi_nor_config, xpi_nor_property_sector_size, &sector_size);
+ 
+     if ((add < USBD_DFU_APP_DEFAULT_ADD) || (add > BOARD_FLASH_BASE_ADDRESS + (uint32_t)DFU_FLASH_SIZE)) {
+-        printf("ERROR!Address is out of range 0x%08x(0x%08x-0x%08x)\n", add, USBD_DFU_APP_DEFAULT_ADD, BOARD_FLASH_BASE_ADDRESS + (uint32_t)DFU_FLASH_SIZE);
++        USB_LOG_ERR("ERROR!Address is out of range 0x%08x(0x%08x-0x%08x)\n", add, USBD_DFU_APP_DEFAULT_ADD, BOARD_FLASH_BASE_ADDRESS + (uint32_t)DFU_FLASH_SIZE);
+         return 1;
+     }
+     uint32_t addr_offset = add - (uint32_t)BOARD_FLASH_BASE_ADDRESS;
+@@ -111,7 +112,7 @@ static int dfu_erase_flash(uint32_t add)
+     hpm_stat_t status = rom_xpi_nor_erase(base, chn, &s_dfu_xpi_nor_config, erase_start, DFU_XPI_FLASH_ERASE_SIZE);
+     if (status == status_success) {
+     } else {
+-        printf("DFU: Flash erase failed, status=%d\r\n", status);
++        USB_LOG_ERR("DFU: Flash erase failed, status=%d, start 0x%08x add 0x%08x\r\n", status, erase_start, add);
+     }
+     __asm("fence.i");
+ 
+@@ -124,13 +125,15 @@ int usbd_dfu_read(uint16_t value, const uint8_t *data, uint16_t length, uint16_t
+     __asm("fence.i");
+     l1c_dc_invalidate_all();
+     if (value == 0) {
+-        if (data[0] == DFU_SPECIAL_CMD_SET_ADDRESS_POINTER) {
++        if (length > 0 && data[0] == DFU_SPECIAL_CMD_SET_ADDRESS_POINTER) {
+             memcpy((uint8_t *)&flash_start_address, &data[1], 4);
+             return 0;
+         }
+     } else if (value > 1) {
+         uint32_t addr = (value - 2) * USBD_DFU_XFER_SIZE + flash_start_address;
+-        if (addr - (uint32_t)BOARD_FLASH_BASE_ADDRESS + length > s_dfu_xpi_nor_size) {
++        if ((addr - (uint32_t)BOARD_FLASH_BASE_ADDRESS + length > s_dfu_xpi_nor_size) && (addr > 512)) {
++            USB_LOG_ERR("DFU_READ: ERROR - out of range, addr=0x%08x, len=%u, flash_size=%u\r\n",
++                   (unsigned int)addr, length, (unsigned int)s_dfu_xpi_nor_size);
+             return 1;
+         }
+         uint8_t *p = (uint8_t *)addr;
+@@ -145,6 +148,12 @@ int usbd_dfu_read(uint16_t value, const uint8_t *data, uint16_t length, uint16_t
+     return -1;
+ }
+ 
++void usbd_dfu_end_load(void)
++{
++    ppor_reset_mask_set_source_enable(HPM_PPOR, ppor_reset_software);
++    ppor_sw_reset(HPM_PPOR, 24);
++}
++
+ int usbd_dfu_write(uint16_t value, const uint8_t *data, uint16_t length)
+ {
+     dfu_flash_init();
